@@ -2,7 +2,7 @@
 
 **Practise difficult client conversations before the real call.** ClientReady is a voice role-play and coaching app for Indian freelancers selling to international clients. You speak to a realistic, fictional US/UK/Canadian/Australian client who pushes back on your price, scope and technology. Then you get a coaching report that quotes what you actually said and shows a stronger answer for *your* offer.
 
-Built for the Great Indian AI Internship Challenge 2026 on **Gnani Prisma v2.5** (speech-to-text) and **Gnani Timbre** (text-to-speech).
+Built on **Gnani Prisma v2.5** (speech-to-text) and **Gnani Timbre** (text-to-speech).
 
 > ClientReady coaches clarity, structure and substance. It never scores an Indian accent as a weakness.
 
@@ -62,7 +62,7 @@ Everything below was checked against [docs.gnani.ai](https://docs.gnani.ai) on 2
 |---|---|---|
 | **Gnani Prisma v2.5** (STT) | `POST https://api.vachana.ai/stt/v3` (multipart). Header `X-API-Key-ID`. Fields `audio_file`, `language_code`, `format=transcribe` (ITN, so prices come back as digits), `bias_list` + `bias_score` (boosts your product names) | Transcribes each learner answer. The browser converts MediaRecorder output (WebM/Opus or MP4, which Prisma's list doesn't cover reliably) into **16 kHz mono 16-bit PCM WAV**. Answers are capped at **30 s**: the REST page allows 60 s, but its OpenAPI spec says 30 s. |
 | **Gnani Timbre v2.5** (TTS, default) | `POST https://api.vachana.ai/api/v1/tts/inference` (JSON). `model: "timbre-v2.5"`, `voice`, `language`, `speed`, `audio_config` (WAV, 24 kHz, mono, PCM16). Returns raw audio bytes. | Speaks the client's replies with an English (`en-IN`) voice: Kaveri, Devika or Trupti (female), Pranav, Girish or Shlok (male). It also plays suggested answers in the report. `timbre-v3.0` is supported via `GNANI_TTS_MODEL`, using its own voice catalog. |
-| **Gnani Evon v3.3** (reasoning) | Open weights ([HF](https://huggingface.co/gnani/gnani-evon-v3.3-30B-A3B)). **Not on Gnani's API platform yet**, per the challenge page. | Optional. Serve it yourself with vLLM or SGLang and point `OPENAI_COMPAT_*` at it. The UI shows `OPENAI_COMPAT_LABEL`, so a different model is never presented as Evon. |
+| **Gnani Evon v3.3** (reasoning) | Open weights ([HF](https://huggingface.co/gnani/gnani-evon-v3.3-30B-A3B)). **Not on Gnani's API platform yet.** | Optional. Serve it yourself with vLLM or SGLang and point `OPENAI_COMPAT_*` at it. The UI shows `OPENAI_COMPAT_LABEL`, so a different model is never presented as Evon. |
 
 **Voices and accents:** Timbre's catalog contains Indian voices. ClientReady doesn't claim US or UK accents. The client's nationality is simulated through role, context and dialogue.
 

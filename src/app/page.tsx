@@ -199,7 +199,7 @@ export default function Home() {
 
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-fg-subtle sm:flex-row sm:justify-between sm:px-6">
-          <p>ClientReady · built for the Great Indian AI Internship Challenge 2026.</p>
+          <p>ClientReady · voice practice for client calls.</p>
           <p>All clients and businesses in scenarios are fictional. Use synthetic data only.</p>
         </div>
       </footer>

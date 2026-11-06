@@ -83,7 +83,7 @@ export default function HistoryPage() {
         </>
       )}
       <p className="mt-10 text-center text-sm text-fg-subtle">
-        Want a fresh challenge? <Link href="/practice" className="text-fg-muted underline-offset-2 hover:underline">Build a new scenario</Link>
+        Ready for another client? <Link href="/practice" className="text-fg-muted underline-offset-2 hover:underline">Build a new scenario</Link>
       </p>
     </div>
   );
