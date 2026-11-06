@@ -55,6 +55,8 @@ async function main() {
             apiKey: env.BHARATCODE_API_KEY,
             model: env.BHARATCODE_CLIENT_MODEL,
             coachModel: env.BHARATCODE_COACH_MODEL,
+            clientReasoningEffort: env.BHARATCODE_CLIENT_REASONING_EFFORT === "none" ? undefined : (env.BHARATCODE_CLIENT_REASONING_EFFORT ?? "low"),
+            coachReasoningEffort: env.BHARATCODE_COACH_REASONING_EFFORT === "none" ? undefined : (env.BHARATCODE_COACH_REASONING_EFFORT ?? "low"),
           })
       : env.ANTHROPIC_API_KEY && (!forced || forced === "anthropic")
         ? new AnthropicReasoning({

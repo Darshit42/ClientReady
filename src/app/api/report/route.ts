@@ -10,7 +10,8 @@ import { VoiceMetricsSchema } from "@/lib/voice/delivery";
 import { chargeSession } from "@/lib/server/live-gate";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+// BharatCode reports can take ~3 minutes (see providers/reasoning/bharatcode.ts).
+export const maxDuration = 300;
 
 const Body = z.object({
   sessionId: z.string().regex(/^[a-zA-Z0-9_-]{8,64}$/),

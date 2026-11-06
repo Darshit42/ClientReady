@@ -45,6 +45,8 @@ export function getReasoner(): ReasoningProvider | null {
       baseUrl: env.bharatcode.baseUrl,
       model: env.bharatcode.clientModel,
       coachModel: env.bharatcode.coachModel,
+      clientReasoningEffort: env.bharatcode.clientReasoningEffort,
+      coachReasoningEffort: env.bharatcode.coachReasoningEffort,
     });
   }
   if (env.reasoning === "anthropic") {

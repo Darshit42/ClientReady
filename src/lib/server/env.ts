@@ -16,6 +16,10 @@ function thinking(v: string | undefined): string | undefined {
   return !v || v.toLowerCase() === "none" ? undefined : v.toUpperCase();
 }
 
+function effort(v: string | undefined): string | undefined {
+  return !v || v.toLowerCase() === "none" ? undefined : v.toLowerCase();
+}
+
 export function getEnv() {
   const gnaniKey = read("GNANI_API_KEY");
   const anthropicKey = read("ANTHROPIC_API_KEY");
@@ -55,6 +59,9 @@ export function getEnv() {
       baseUrl: read("BHARATCODE_BASE_URL") ?? "https://bharatcode.ai/api/model/v1",
       clientModel: read("BHARATCODE_CLIENT_MODEL") ?? "qwen-3.8-27b",
       coachModel: read("BHARATCODE_COACH_MODEL") ?? read("BHARATCODE_CLIENT_MODEL") ?? "qwen-3.8-27b",
+      // "none" omits the parameter. "low" keeps calls fast and reports inside the time limit.
+      clientReasoningEffort: effort(read("BHARATCODE_CLIENT_REASONING_EFFORT") ?? "low"),
+      coachReasoningEffort: effort(read("BHARATCODE_COACH_REASONING_EFFORT") ?? "low"),
     },
     anthropic: {
       apiKey: anthropicKey,

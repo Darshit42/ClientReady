@@ -19,6 +19,14 @@ export interface OpenAICompatibleOptions {
   label: string;
   /** Wait before the single retry on 429/5xx (a busy or queued model). */
   retryDelayMs?: number;
+  /** Per-request timeouts. Defaults: 45 s per client turn, 120 s per report. */
+  timeoutMs?: Partial<Record<"client-turn" | "coach-report", number>>;
+  /** Total attempts including the first (max 3), per purpose. Default 2. */
+  attempts?: Partial<Record<"client-turn" | "coach-report", number>>;
+  /** reasoning_effort per purpose, for reasoning models. Omitted when unset. */
+  reasoningEffort?: Partial<Record<"client-turn" | "coach-report", string>>;
+  /** Extra output tokens for servers whose max_tokens includes reasoning. Capped at 32,000 total. */
+  reasoningHeadroomTokens?: number;
   fetchImpl?: typeof fetch;
 }
 
@@ -48,6 +56,7 @@ export class OpenAICompatibleReasoning implements ReasoningProvider {
   }): Promise<T> {
     const jsonSchema = z.toJSONSchema(schema);
     const sys = `${system}\n\nRespond with a single JSON object that matches this JSON Schema exactly. No prose, no code fences.\n${JSON.stringify(jsonSchema)}`;
+    const effort = this.opts.reasoningEffort?.[purpose];
     const model = purpose === "coach-report" ? (this.opts.coachModel ?? this.opts.model) : this.opts.model;
     const send = (jsonMode: boolean) =>
       fetchWithRetry(
@@ -60,15 +69,16 @@ export class OpenAICompatibleReasoning implements ReasoningProvider {
           },
           body: JSON.stringify({
             model,
-            max_tokens: maxTokens,
+            max_tokens: Math.min(maxTokens + (this.opts.reasoningHeadroomTokens ?? 0), 32_000),
             temperature: purpose === "client-turn" ? 0.7 : 0.3,
             ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+            ...(effort ? { reasoning_effort: effort } : {}),
             messages: [{ role: "system", content: sys }, ...messages],
           }),
         },
         {
-          timeoutMs: purpose === "client-turn" ? 45_000 : 120_000,
-          attempts: 2,
+          timeoutMs: this.opts.timeoutMs?.[purpose] ?? (purpose === "client-turn" ? 45_000 : 120_000),
+          attempts: this.opts.attempts?.[purpose] ?? 2,
           baseDelayMs: this.opts.retryDelayMs,
           fetchImpl: this.opts.fetchImpl,
         },
@@ -83,9 +93,17 @@ export class OpenAICompatibleReasoning implements ReasoningProvider {
       if (res.status === 429) throw new AppError("rate_limited", "The reasoning server is rate-limited.", 429, true);
       throw new AppError("upstream_error", `Reasoning server error (HTTP ${res.status}).`, 502, res.status >= 500);
     }
-    const body = (await res.json().catch(() => null)) as { choices?: Array<{ message?: { content?: string } }> } | null;
-    const content = body?.choices?.[0]?.message?.content;
-    if (!content) throw new AppError("model_output_invalid", "The reasoning server returned no content.", 502, true);
+    const body = (await res.json().catch(() => null)) as {
+      choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
+    } | null;
+    const choice = body?.choices?.[0];
+    const content = choice?.message?.content;
+    if (!content) {
+      if (choice?.finish_reason === "length") {
+        throw new AppError("model_output_invalid", "The reasoning model ran out of output budget before answering. Please retry.", 502, true);
+      }
+      throw new AppError("model_output_invalid", "The reasoning server returned no content.", 502, true);
+    }
     return parseModelJSON(content, schema);
   }
 }

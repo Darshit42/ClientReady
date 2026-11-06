@@ -44,6 +44,8 @@ export type ClientState = z.infer<typeof ClientStateSchema>;
 export const ClientTurnOutputSchema = z.object({
   learnerEnglish: z
     .string()
+    // qwen-3.8-27b (BharatCode) omits the field instead of sending "" (seen live, 6 Nov 2026).
+    .default("")
     .describe("Only when the freelancer did not speak English: a faithful professional English rendering of their last message. Otherwise empty string."),
   reply: z.string().describe("What the client says out loud next. Plain spoken English, no markdown, no stage directions."),
   interest: z.number().describe("Client's current interest in buying, integer 0-100."),

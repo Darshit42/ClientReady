@@ -73,6 +73,39 @@ describe("BharatCode model API provider", () => {
     expect(busy).toHaveBeenCalledTimes(2); // one retry, then a "model is busy" error
   });
 
+  it("sends low reasoning effort and token headroom, with one long attempt for reports", async () => {
+    const fetchImpl = vi.fn(async () => completion(JSON.stringify(clientOutput())));
+    const p = new BharatCodeReasoning({ apiKey: "k", clientReasoningEffort: "low", coachReasoningEffort: "low", fetchImpl: fetchImpl as unknown as typeof fetch });
+    await ask(p);
+    const body = JSON.parse(String((fetchImpl.mock.calls[0] as unknown as [string, RequestInit])[1].body));
+    expect(body.reasoning_effort).toBe("low");
+    expect(body.max_tokens).toBe(4_800);
+    // @ts-expect-error read private options
+    expect(p.opts.attempts["coach-report"]).toBe(1);
+    // @ts-expect-error read private options
+    expect(p.opts.timeoutMs["coach-report"]).toBe(280_000);
+  });
+
+  it("omits reasoning_effort when not set", async () => {
+    const fetchImpl = vi.fn(async () => completion(JSON.stringify(clientOutput())));
+    await ask(new BharatCodeReasoning({ apiKey: "k", fetchImpl: fetchImpl as unknown as typeof fetch }), "coach-report");
+    expect(JSON.parse(String((fetchImpl.mock.calls[0] as unknown as [string, RequestInit])[1].body)).reasoning_effort).toBeUndefined();
+  });
+
+  it("explains an exhausted output budget", async () => {
+    const empty = new Response(JSON.stringify({ choices: [{ message: { content: "" }, finish_reason: "length" }] }), { status: 200 });
+    const p = new BharatCodeReasoning({ apiKey: "k", fetchImpl: (async () => empty) as unknown as typeof fetch });
+    await expect(ask(p)).rejects.toThrow(/output budget/);
+  });
+
+  it("accepts a client turn without learnerEnglish (qwen omits it for English speakers)", async () => {
+    const { learnerEnglish: _omit, ...rest } = clientOutput();
+    void _omit;
+    const p = new BharatCodeReasoning({ apiKey: "k", fetchImpl: (async () => completion(JSON.stringify(rest))) as unknown as typeof fetch });
+    const out = await ask(p);
+    expect(out.learnerEnglish).toBe("");
+  });
+
   it("drives a real client turn", async () => {
     const p = new BharatCodeReasoning({ apiKey: "k", fetchImpl: (async () => completion(JSON.stringify(clientOutput({ reply: "What's included?" })))) as unknown as typeof fetch });
     const res = await runClientTurn(p, scenario, sampleTurns.slice(0, 2), null);

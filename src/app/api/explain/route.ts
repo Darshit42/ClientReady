@@ -7,7 +7,7 @@ import { once } from "@/lib/server/idempotency";
 import { chargeSession } from "@/lib/server/live-gate";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 const Body = ExplainInputSchema.extend({
   sessionId: z.string().regex(/^[a-zA-Z0-9_-]{8,64}$/),
