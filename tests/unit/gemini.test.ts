@@ -120,6 +120,7 @@ describe("Gemini reasoning provider", () => {
     [400, "API key not valid. Please pass a valid API key.", "auth_failed"],
     [403, "Permission denied", "auth_failed"],
     [404, "models/x is not found", "not_configured"],
+    [402, "Your prepayment credits are depleted.", "credits_exhausted"],
     [429, "Resource has been exhausted", "rate_limited"],
   ])("maps HTTP %i without retrying", async (status, message, code) => {
     const { client, calls } = fakeClient([new ApiError({ status, message }), { text: JSON.stringify(clientOutput()) }]);

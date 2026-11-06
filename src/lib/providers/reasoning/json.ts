@@ -3,10 +3,11 @@ import { AppError } from "@/lib/server/errors";
 
 /**
  * Parse JSON from a model that was asked (not constrained) to emit JSON:
- * tolerates code fences and leading/trailing prose, then validates.
+ * tolerates reasoning in <think> tags, code fences and leading/trailing
+ * prose, then validates.
  */
 export function parseModelJSON<T>(raw: string, schema: z.ZodType<T>): T {
-  let text = raw.trim();
+  let text = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
   const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fence) text = fence[1].trim();
   const start = text.indexOf("{");

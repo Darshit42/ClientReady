@@ -6,6 +6,7 @@ import { GnaniTimbreTTS } from "./gnani/timbre";
 import { AnthropicReasoning } from "./reasoning/anthropic";
 import { OpenAICompatibleReasoning } from "./reasoning/openai-compatible";
 import { GeminiReasoning } from "./reasoning/gemini";
+import { BharatCodeReasoning } from "./reasoning/bharatcode";
 import type { ReasoningProvider, SynthesisProvider, TranscriptionProvider } from "./types";
 
 export function getTranscriber(): TranscriptionProvider {
@@ -37,6 +38,15 @@ export function getSynthesizer(): SynthesisProvider {
 export function getReasoner(): ReasoningProvider | null {
   const env = getEnv();
   if (env.reasoning === "demo") return null;
+  if (env.reasoning === "bharatcode") {
+    if (!env.bharatcode.apiKey) throw new AppError("not_configured", "REASONING_PROVIDER=bharatcode but BHARATCODE_API_KEY is missing.", 503);
+    return new BharatCodeReasoning({
+      apiKey: env.bharatcode.apiKey,
+      baseUrl: env.bharatcode.baseUrl,
+      model: env.bharatcode.clientModel,
+      coachModel: env.bharatcode.coachModel,
+    });
+  }
   if (env.reasoning === "anthropic") {
     if (!env.anthropic.apiKey) throw new AppError("not_configured", "REASONING_PROVIDER=anthropic but ANTHROPIC_API_KEY is missing.", 503);
     return new AnthropicReasoning({

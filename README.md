@@ -45,6 +45,7 @@ flowchart LR
   CONV --> STT
   PRISMA -->|POST /stt/v3| G1[(api.vachana.ai)]
   TIMBRE -->|POST /api/v1/tts/inference · /api/v1/tts/sse| G1
+  R --> BC[BharatCode model API<br/>qwen-3.8-27b]
   R --> GM[Google Gemini]
   R --> A[Anthropic Claude]
   R --> O[OpenAI-compatible server<br/>e.g. self-hosted Gnani Evon v3.3]
@@ -70,8 +71,9 @@ Everything below was checked against [docs.gnani.ai](https://docs.gnani.ai) on 2
 
 ### Reasoning provider
 
-The provider is selected automatically: `ANTHROPIC_API_KEY` → Claude; otherwise `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) → Gemini; otherwise `OPENAI_COMPAT_BASE_URL` + `OPENAI_COMPAT_MODEL` → that server; otherwise the **demo engine**. Set `REASONING_PROVIDER` to force one.
+The provider is selected automatically: `BHARATCODE_API_KEY` → BharatCode; otherwise `ANTHROPIC_API_KEY` → Claude; otherwise `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) → Gemini; otherwise `OPENAI_COMPAT_BASE_URL` + `OPENAI_COMPAT_MODEL` → that server; otherwise the **demo engine**. Set `REASONING_PROVIDER` to force one.
 
+- **BharatCode** uses BharatCode's OpenAI-compatible model API (`https://bharatcode.ai/api/model/v1/chat/completions`, Bearer `BHARATCODE_API_KEY`) with `qwen-3.8-27b` by default, in JSON mode with the schema in the prompt. If the server rejects JSON mode, the call is retried once without it. Qwen `<think>` reasoning is stripped before Zod validation, and a busy model (503) is retried once after 3 s. See `BharatCode.txt`.
 - **Gemini** uses the official `@google/genai` SDK `models.generateContent` with `responseMimeType: "application/json"` and `responseJsonSchema` (generated from the same Zod schemas, with nullable fields rewritten into Gemini's `["string","null"]` form). The output is then re-validated with Zod. The default model is `gemini-3.8-flash` for both the client and the coach. Client turns use `thinkingLevel: LOW`, which measured ~3.6 s per turn versus ~12 s at the model default, with the same quality of reply. Coaching reports keep the model's default thinking (~25 s per report). If a model rejects a thinking level, the call is retried once without it. Retries happen once, and only on 5xx errors. Quota (429), key (400/403) and unknown-model (404) errors get specific messages.
 - **Claude** uses `@anthropic-ai/sdk` `beta.messages.parse` with Zod structured outputs, so every client turn and report is schema-validated JSON. The default model is `claude-opus-5-5`, with `effort: low` for client turns (latency) and `medium` for reports. Server-side refusal fallback (`fallbacks: "default"`) is on for models that support it.
 - **OpenAI-compatible** uses JSON mode plus the JSON Schema in the prompt, then tolerant parsing and Zod validation.
@@ -117,10 +119,11 @@ See [`.env.example`](.env.example). All are server-side only. `/api/status` expo
 |---|---|
 | `GNANI_API_KEY` | Prisma and Timbre. Create one at [app.gnani.ai/voice](https://app.gnani.ai/voice). |
 | `GNANI_TTS_MODEL` | `timbre-v2.5` (default) or `timbre-v3.0` |
+| `BHARATCODE_API_KEY`, `BHARATCODE_CLIENT_MODEL`, `BHARATCODE_COACH_MODEL`, `BHARATCODE_BASE_URL` | BharatCode reasoning. Get a key at [bharatcode.ai/account](https://bharatcode.ai/account). |
 | `GEMINI_API_KEY` (or `GOOGLE_API_KEY`), `GEMINI_CLIENT_MODEL`, `GEMINI_COACH_MODEL`, `GEMINI_CLIENT_THINKING_LEVEL`, `GEMINI_COACH_THINKING_LEVEL` | Gemini reasoning. Get a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_CLIENT_MODEL`, `ANTHROPIC_COACH_MODEL` | Claude reasoning |
 | `OPENAI_COMPAT_BASE_URL`, `OPENAI_COMPAT_MODEL`, `OPENAI_COMPAT_API_KEY`, `OPENAI_COMPAT_LABEL` | Self-hosted Evon or another compatible server |
-| `REASONING_PROVIDER` | Force `anthropic`, `gemini`, `openai-compatible` or `demo` |
+| `REASONING_PROVIDER` | Force `bharatcode`, `anthropic`, `gemini`, `openai-compatible` or `demo` |
 | `RATE_LIMIT_PER_MINUTE` | Per-IP, per-endpoint burst limit, in memory (default 30) |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Durable counters for the limits below, shared across Vercel instances. Without them, counters are per instance and a warning is logged. |
 | `LIVE_SESSIONS_PER_VISITOR_PER_DAY` | Live calls per visitor per IST day (default 3). A visitor is a salted SHA-256 of the IP; raw IPs are never stored. |

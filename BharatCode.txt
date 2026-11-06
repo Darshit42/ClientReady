@@ -1,0 +1,87 @@
+ClientReady: BharatCode Build League entry
+==========================================
+
+Project:    ClientReady
+Category:   Voice AI / career and sales coaching
+Repository: https://github.com/Mandalorian7773/ClientReady
+Live demo:  https://client-readyyy.vercel.app
+Builder:    Mandalorian7773 (solo)
+
+
+What it does
+------------
+Indian freelancers can build great software but often lose international
+clients on the sales call. ClientReady is a voice practice room for that call.
+You pitch your real offer out loud to a simulated US, UK or Australian client
+who pushes back on price, scope, risk and trust, reacting to what you actually
+said. When the call ends, a coach voice debriefs you by quoting your exact
+words and suggesting better lines for your offer, and a written report scores
+nine sales skills. It coaches clarity, structure and confidence, never accent.
+You can speak in English, Hinglish or another Indian language.
+
+
+How BharatCode is used
+----------------------
+BharatCode's model API is the reasoning engine: it plays the client and
+writes the coaching.
+
+- Model:    qwen-3.8-27b (BHARATCODE_CLIENT_MODEL / BHARATCODE_COACH_MODEL
+            can select another model the key can use, e.g. deepseek-v4.1-flash)
+- Endpoint: POST https://bharatcode.ai/api/model/v1/chat/completions
+            (OpenAI-compatible)
+- Auth:     Authorization: Bearer $BHARATCODE_API_KEY, read only on the server
+            (src/lib/server/env.ts). The key is never sent to the browser or
+            committed to this repo.
+- Client:   src/lib/providers/reasoning/bharatcode.ts
+            (built on src/lib/providers/reasoning/openai-compatible.ts)
+
+Each call returns JSON that matches a schema and is validated before use:
+
+1. Client turns (/api/turn): the simulated client's next spoken line, its
+   interest level, which hidden concerns it has raised, and whether the call
+   is ending. When the learner speaks Hindi or Hinglish, the same call also
+   returns a faithful English rendering of what they said.
+2. Coaching report (/api/report): scores against a 9-skill rubric, moments
+   quoted from the transcript with better lines, proposal steps, a next drill,
+   and the script the coach voice reads aloud.
+
+Safeguards around the model output:
+- Every quote the model cites is checked against the real transcript;
+  unverifiable quotes, and spoken segments that use them, are dropped.
+- The overall score is computed by the app from the rubric weights, not by
+  the model.
+- Reasoning wrapped in <think> tags is ignored; malformed JSON is rejected
+  with a clear error, never shown as a result.
+- A busy model (503) is retried once after a few seconds; 401/402 are
+  reported clearly and not retried.
+
+The deployment picks BharatCode automatically whenever BHARATCODE_API_KEY is
+set. GET /api/status shows which reasoning model is active.
+
+
+Other components
+----------------
+- Speech to text: Gnani Prisma v2.5 (REST). Turn-taking is detected in the
+  browser, so the call is hands-free.
+- Text to speech: Gnani Timbre v2.5, streamed over SSE for the client's and
+  the coach's voices.
+- No audio is stored. Session history stays in the user's browser.
+
+
+Stack
+-----
+Next.js 15, React 19, TypeScript, Tailwind CSS 4, Zod, Vitest, Playwright.
+Deployed on Vercel, with optional Upstash Redis for usage limits.
+Unit tests mock every external API, so no key is needed to run them.
+
+
+Run locally
+-----------
+  npm install
+  cp .env.example .env.local     # set BHARATCODE_API_KEY and GNANI_API_KEY
+  npm run dev                    # http://localhost:3000
+  npm test                       # unit tests, no network
+  npm run smoke                  # one real call through Prisma, BharatCode and Timbre
+
+No mic or keys? Open /practice/session?sample for a scripted sample call,
+clearly labelled as a sample.

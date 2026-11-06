@@ -5,7 +5,7 @@ import "server-only";
  * booleans and non-secret identifiers ever leave this module via status().
  */
 
-export type ReasoningProviderId = "anthropic" | "gemini" | "openai-compatible" | "demo";
+export type ReasoningProviderId = "bharatcode" | "anthropic" | "gemini" | "openai-compatible" | "demo";
 
 function read(name: string): string | undefined {
   const v = process.env[name];
@@ -20,13 +20,16 @@ export function getEnv() {
   const gnaniKey = read("GNANI_API_KEY");
   const anthropicKey = read("ANTHROPIC_API_KEY");
   const geminiKey = read("GEMINI_API_KEY") ?? read("GOOGLE_API_KEY");
+  const bharatcodeKey = read("BHARATCODE_API_KEY");
   const oaiBase = read("OPENAI_COMPAT_BASE_URL");
   const oaiModel = read("OPENAI_COMPAT_MODEL");
 
   const requested = read("REASONING_PROVIDER") as ReasoningProviderId | undefined;
   let reasoning: ReasoningProviderId;
-  if (requested === "anthropic" || requested === "gemini" || requested === "openai-compatible" || requested === "demo") {
+  if (requested === "bharatcode" || requested === "anthropic" || requested === "gemini" || requested === "openai-compatible" || requested === "demo") {
     reasoning = requested;
+  } else if (bharatcodeKey) {
+    reasoning = "bharatcode";
   } else if (anthropicKey) {
     reasoning = "anthropic";
   } else if (geminiKey) {
@@ -47,6 +50,12 @@ export function getEnv() {
       ttsTimeoutMs: Number(read("GNANI_TTS_TIMEOUT_MS") ?? 30_000),
     },
     reasoning,
+    bharatcode: {
+      apiKey: bharatcodeKey,
+      baseUrl: read("BHARATCODE_BASE_URL") ?? "https://bharatcode.ai/api/model/v1",
+      clientModel: read("BHARATCODE_CLIENT_MODEL") ?? "qwen-3.8-27b",
+      coachModel: read("BHARATCODE_COACH_MODEL") ?? read("BHARATCODE_CLIENT_MODEL") ?? "qwen-3.8-27b",
+    },
     anthropic: {
       apiKey: anthropicKey,
       clientModel: read("ANTHROPIC_CLIENT_MODEL") ?? "claude-opus-5-5",
@@ -77,7 +86,9 @@ export type AppEnv = ReturnType<typeof getEnv>;
 export function publicStatus() {
   const env = getEnv();
   const reasoningLabel =
-    env.reasoning === "anthropic"
+    env.reasoning === "bharatcode"
+      ? `BharatCode (${env.bharatcode.clientModel})`
+      : env.reasoning === "anthropic"
       ? `Anthropic Claude (${env.anthropic.clientModel})`
       : env.reasoning === "gemini"
         ? `Google Gemini (${env.gemini.clientModel})`
@@ -86,6 +97,7 @@ export function publicStatus() {
         : "Demo engine (rule-based, not an LLM)";
   const reasoningReady =
     env.reasoning === "demo" ||
+    (env.reasoning === "bharatcode" && !!env.bharatcode.apiKey) ||
     (env.reasoning === "anthropic" && !!env.anthropic.apiKey) ||
     (env.reasoning === "gemini" && !!env.gemini.apiKey) ||
     (env.reasoning === "openai-compatible" && !!env.openaiCompat.baseUrl && !!env.openaiCompat.model);

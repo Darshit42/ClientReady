@@ -29,6 +29,7 @@ async function main() {
   const { parseScenario } = await import("../src/lib/scenario/schema");
   const { AnthropicReasoning } = await import("../src/lib/providers/reasoning/anthropic");
   const { GeminiReasoning } = await import("../src/lib/providers/reasoning/gemini");
+  const { BharatCodeReasoning } = await import("../src/lib/providers/reasoning/bharatcode");
   const { OpenAICompatibleReasoning } = await import("../src/lib/providers/reasoning/openai-compatible");
 
   const env = process.env;
@@ -49,6 +50,12 @@ async function main() {
   const reasoner =
     forced === "demo"
       ? null
+      : env.BHARATCODE_API_KEY && (!forced || forced === "bharatcode")
+        ? new BharatCodeReasoning({
+            apiKey: env.BHARATCODE_API_KEY,
+            model: env.BHARATCODE_CLIENT_MODEL,
+            coachModel: env.BHARATCODE_COACH_MODEL,
+          })
       : env.ANTHROPIC_API_KEY && (!forced || forced === "anthropic")
         ? new AnthropicReasoning({
             apiKey: env.ANTHROPIC_API_KEY,

@@ -174,6 +174,8 @@ export function mapGeminiError(err: unknown, model: string): AppError {
     case 401:
     case 403:
       return new AppError("auth_failed", "Gemini rejected the API key or the key lacks access. Check GEMINI_API_KEY.", 502);
+    case 402:
+      return new AppError("credits_exhausted", "Gemini's prepaid credits are used up. Top them up in Google AI Studio, or switch the reasoning provider.", 402);
     case 404:
       return new AppError("not_configured", `Gemini model "${model}" was not found. Set GEMINI_CLIENT_MODEL / GEMINI_COACH_MODEL to a model your key can use.`, 503);
     case 429:
