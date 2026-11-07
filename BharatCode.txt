@@ -5,7 +5,8 @@ Project:    ClientReady
 Category:   Voice AI / career and sales coaching
 Repository: https://github.com/Mandalorian7773/ClientReady
 Live demo:  https://client-readyyy.vercel.app
-Builder:    Mandalorian7773 (solo)
+Team:       Aditya Jagrani (@Mandalorian7773)
+            Darshit Punit Sengra (@Darshit42)
 
 
 What it does
