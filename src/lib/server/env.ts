@@ -70,8 +70,9 @@ export function getEnv() {
     },
     gemini: {
       apiKey: geminiKey,
-      clientModel: read("GEMINI_CLIENT_MODEL") ?? "gemini-3.8-flash",
-      coachModel: read("GEMINI_COACH_MODEL") ?? "gemini-3.8-flash",
+      // gemini-3.5-flash answers in ~3 s on free-tier keys; 3.8-flash timed out there (7 Nov 2026).
+      clientModel: read("GEMINI_CLIENT_MODEL") ?? "gemini-3.5-flash",
+      coachModel: read("GEMINI_COACH_MODEL") ?? "gemini-3.5-flash",
       // "none" disables the setting; client turns default to LOW for latency.
       clientThinkingLevel: thinking(read("GEMINI_CLIENT_THINKING_LEVEL") ?? "LOW"),
       coachThinkingLevel: thinking(read("GEMINI_COACH_THINKING_LEVEL")),

@@ -67,8 +67,8 @@ async function main() {
         : geminiKey && (!forced || forced === "gemini")
           ? new GeminiReasoning({
               apiKey: geminiKey,
-              clientModel: env.GEMINI_CLIENT_MODEL ?? "gemini-3.8-flash",
-              coachModel: env.GEMINI_COACH_MODEL ?? "gemini-3.8-flash",
+              clientModel: env.GEMINI_CLIENT_MODEL ?? "gemini-3.5-flash",
+              coachModel: env.GEMINI_COACH_MODEL ?? "gemini-3.5-flash",
               clientThinkingLevel: env.GEMINI_CLIENT_THINKING_LEVEL === "none" ? undefined : (env.GEMINI_CLIENT_THINKING_LEVEL ?? "LOW"),
               coachThinkingLevel: env.GEMINI_COACH_THINKING_LEVEL === "none" ? undefined : env.GEMINI_COACH_THINKING_LEVEL,
             })

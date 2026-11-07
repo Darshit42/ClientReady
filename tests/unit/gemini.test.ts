@@ -175,7 +175,7 @@ describe("Gemini env selection", () => {
       process.env.GEMINI_API_KEY = "g-secret";
       const s = publicStatus();
       expect(s.reasoning.provider).toBe("gemini");
-      expect(s.reasoning.label).toBe("Google Gemini (gemini-3.8-flash)");
+      expect(s.reasoning.label).toBe("Google Gemini (gemini-3.5-flash)");
       const { getEnv } = await import("@/lib/server/env");
       expect(getEnv().gemini.clientThinkingLevel).toBe("LOW");
       expect(getEnv().gemini.coachThinkingLevel).toBeUndefined();
