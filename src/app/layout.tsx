@@ -1,10 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Inter_Tight } from "next/font/google";
+import { GeistMono } from "geist/font/mono";
+import localFont from "next/font/local";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
-const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["latin"], weight: ["400", "500", "600"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+// Fonts are bundled from npm so the build never fetches from Google Fonts (which broke Vercel builds).
+const interTight = localFont({
+  src: "../../node_modules/@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2",
+  variable: "--font-inter-tight",
+  weight: "100 900",
+});
 
 const TITLE = "ClientReady: practise client calls before the real one";
 const DESCRIPTION =
@@ -24,7 +29,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       {/* Browser extensions (e.g. ColorZilla's cz-shortcut-listen) add attributes to <body> before React hydrates. */}
-      <body className={`${interTight.variable} ${geistMono.variable} min-h-dvh antialiased`} suppressHydrationWarning>
+      <body className={`${interTight.variable} ${GeistMono.variable} min-h-dvh antialiased`} suppressHydrationWarning>
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-fg focus:px-3 focus:py-2 focus:text-bg">
           Skip to content
         </a>
